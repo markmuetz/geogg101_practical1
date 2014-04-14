@@ -102,6 +102,15 @@ def plot_dredge_data(time, cols, data):
 	print(rmse(d1, d2))
 	plt.show()
 
+    for offset in [2, 3]:
+	#print('%s\n%s'%(cols[offset], cols[offset + 8]))
+        plt.title('%s delta velocity magnitude (m/s)'%(cols[offset].split(' - ')[0]))
+	d1 = data[:, offset]
+	d2 = data[:, offset + 8]
+	plt.plot(d1 - d2)
+	print(rmse(d1, d2))
+	plt.show()
+
     for offset in range(4):
 	#print('%s\n%s'%(cols[offset + 4], cols[offset + 12]))
         plt.title('%s surface water elevation'%(cols[offset].split(' - ')[0]))
