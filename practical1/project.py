@@ -92,20 +92,24 @@ def load_dredging_data():
 
 def plot_dredge_data(time, cols, data):
     for offset in range(4):
-	plt.title('%s\n%s'%(cols[offset], cols[offset + 8]))
+	#print('%s\n%s'%(cols[offset], cols[offset + 8]))
+        plt.title('%s velocity magnitude (m/s)'%(cols[offset].split(' - ')[0]))
 	d1 = data[:, offset]
 	d2 = data[:, offset + 8]
-	plt.plot(d1)
-	plt.plot(d2)
+	plt.plot(d1, label='undredged')
+	plt.plot(d2, label='dredged')
+        plt.legend(loc='best')
 	print(rmse(d1, d2))
 	plt.show()
 
     for offset in range(4):
-	plt.title('%s\n%s'%(cols[offset + 4], cols[offset + 12]))
+	#print('%s\n%s'%(cols[offset + 4], cols[offset + 12]))
+        plt.title('%s surface water elevation'%(cols[offset].split(' - ')[0]))
 	d1 = data[:, offset + 4]
 	d2 = data[:, offset + 12]
-	plt.plot(d1)
-	plt.plot(d2)
+	plt.plot(d1, label='undredged')
+	plt.plot(d2, label='dredged')
+        plt.legend(loc='best')
 	print(rmse(d1, d2))
 	plt.show()
 
