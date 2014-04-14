@@ -1,0 +1,19 @@
+So far:
+
+* run all calibration (came up with n=0.025 as optimum value)
+* run the dredged scenario, calculated diffs and exported all data:
+    * dredging_effect_with_nice_headers.txt
+    * dredging_effect_with_column_headers.txt
+* plotted the values
+
+Observations:
+
+Graphs:
+* The vel mag across the dredged channel is slightly lower
+* The water surface elevation is almost unchanged
+* Mid-estuary and Upstream vel mags are essentially unchanged after dredging
+* Dredged vel mags are lower for Berth, Inlet, the diff is greatest for Berth
+
+SMS:
+There is a small 'hotspot' just upstream of the dredged channel where dredged
+is faster. Otherwise it is slower.
