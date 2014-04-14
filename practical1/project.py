@@ -1,4 +1,5 @@
 import re
+import argparse
 import glob
 import numpy as np
 import pylab as plt
@@ -25,7 +26,7 @@ def load_cal_data(filename):
     cal_data = np.array(split_lines).astype('float')
     return cal_data
 
-def calibrate_data():
+def calibrate_data(args):
     '''Calibrate modelled data against observed data'''
     print 'calibrating data'
 
@@ -69,17 +70,44 @@ def calibrate_data():
 		print '  %s:'%var_name, test.func_name, test_value
 		vals[var_name][test.func_name].append(test_value)
     
-    # Plot the results.
-    for var_name, var_col in vars:
-	for test in tests:
-	    test_name = test.func_name
-	    plt.title('%s for %s'%(test_name, var_name))
-	    plt.xlabel('Bed friction coefficient (n)')
-	    plt.ylabel(test_name.upper())
-	    plt.plot(ns, vals[var_name][test_name])
-	    plt.show()
+    if args.plot:
+	# Plot the results.
+	for var_name, var_col in vars:
+	    for test in tests:
+		test_name = test.func_name
+		plt.title('%s for %s'%(test_name, var_name))
+		plt.xlabel('Bed friction coefficient (n)')
+		plt.ylabel(test_name.upper())
+		plt.plot(ns, vals[var_name][test_name])
+		plt.show()
 
     return obs, all_cal_data
+
+def load_dredging_data():
+    raw_data = np.loadtxt('data_files/dredging_effect_with_nice_headers.txt', delimiter=',')
+    time = raw_data[:, 0]
+    data = raw_data[:, 1::2]
+    cols = np.loadtxt('data_files/dredging_effect_column_headers.txt', dtype=object, delimiter=',')
+    return time, cols, data
+
+def plot_dredge_data(time, cols, data):
+    for offset in range(4):
+	plt.title('%s\n%s'%(cols[offset], cols[offset + 8]))
+	d1 = data[:, offset]
+	d2 = data[:, offset + 8]
+	plt.plot(d1)
+	plt.plot(d2)
+	print(rmse(d1, d2))
+	plt.show()
+
+    for offset in range(4):
+	plt.title('%s\n%s'%(cols[offset + 4], cols[offset + 12]))
+	d1 = data[:, offset + 4]
+	d2 = data[:, offset + 12]
+	plt.plot(d1)
+	plt.plot(d2)
+	print(rmse(d1, d2))
+	plt.show()
 
 def rmse(obs, mod):
     '''Calc RMSE, will not work if len(obs) != len(mod)'''
@@ -90,13 +118,29 @@ def nse(obs, mod):
     obs_mean = obs.mean()
     return 1 - ((obs - mod)**2).sum() / ((obs - obs_mean)**2).sum()
 
-def model_scenario():
+def model_scenario(args):
     print 'modelling scenario'
+    time, cols, dredge_data = load_dredging_data()
+    if args.plot:
+	plot_dredge_data(time, cols, dredge_data)
+    return {'time': time, 'cols': cols, 'dredge_data': dredge_data}
 
-def run_project():
+def run_project(args):
     '''Entry point'''
-    calibrate_data()
-    model_scenario()
+    res = {}
+    if args.cal:
+	res['cal'] = calibrate_data(args)
+    if args.mod:
+	res['mod'] = model_scenario(args)
+    return res
+
+def create_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--cal', action='store_true')
+    parser.add_argument('-m', '--mod', action='store_true')
+    parser.add_argument('-p', '--plot', action='store_true')
+    args = parser.parse_args()
+    return args
 
 if __name__ == "__main__":
-    run_project()
+    run_project(create_args())

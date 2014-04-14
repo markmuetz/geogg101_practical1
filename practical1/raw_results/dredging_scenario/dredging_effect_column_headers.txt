@@ -1,0 +1,30 @@
+Mid-estuary - undredged velocity mag
+Upstream - undredged velocity mag
+Berth - undredged velocity mag
+Inlet - undredged velocity mag
+
+Mid-estuary - undredged water surface elevation
+Upstream - undredged water surface elevation
+Berth - undredged water surface elevation
+Inlet - undredged water surface elevation
+
+Mid-estuary - dredged velocity mag
+Upstream - dredged velocity mag
+Berth - dredged velocity mag
+Inlet - dredged velocity mag
+
+Mid-estuary - dredged water surface elevation
+Upstream - dredged water surface elevation
+Berth - dredged water surface elevation
+Inlet - dredged water surface elevation
+
+Mid-estuary - Delta vel magnitude
+Upstream - Delta vel magnitude
+Berth - Delta vel magnitude
+Inlet - Delta vel magnitude
+
+Mid-estuary - Delta water surf elevation
+Upstream - Delta water surf elevation
+Berth - Delta water surf elevation
+Inlet - Delta water surf elevation
+
