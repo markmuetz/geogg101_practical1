@@ -1,8 +1,10 @@
 import re
 import argparse
 import glob
+
 import numpy as np
 import pylab as plt
+from matplotlib.ticker import FuncFormatter
 
 OBS_FILENAME = 'data_files/calibration-files/fowey_observed_data.txt'
 MODEL_CAL_DIR = 'raw_results/calibration'
@@ -37,11 +39,11 @@ def calibrate_data(args):
 
     # Build some data structures to hold results.
     tests = [rmse, nse]
-    vars = [('vel_mag', 1), ('water_level', 3)]
+    variables = [('Velocity magnitude', 1), ('Water level', 3)]
 
     ns = []
     vals = {}
-    for var_name, var_col in vars:
+    for var_name, var_col in variables:
 	vals[var_name] = {}
 	for test in tests:
 	    vals[var_name][test.func_name] = []
@@ -60,7 +62,7 @@ def calibrate_data(args):
 
 
 	ns.append(float(n))
-	for var_name, var_col in vars:
+	for var_name, var_col in variables:
 	    var_cal_data = cal_data[:, var_col]
 	    var_obs = obs[:, var_col]
 	    for test in tests:
@@ -70,16 +72,45 @@ def calibrate_data(args):
 		print '  %s:'%var_name, test.func_name, test_value
 		vals[var_name][test.func_name].append(test_value)
     
+    def fmt(x, pos):
+        return '%1.2f'%x
+
+    graph_formats = {
+            'Velocity magnitude': {'rmse': (np.arange( 0.04, 0.081, 0.01), 0.035, 0.085),
+                        'nse':  (np.arange( 0.86, 0.961, 0.02), 0.85, 0.97)},
+            'Water level': {'rmse': (np.arange( 0.03, 0.041, 0.002), 0.029, 0.041),
+                            'nse':  (np.arange( 0.995, 0.9971, 0.001), 0.9945, 0.9975)}}
+
+
+    formatter = FuncFormatter(fmt)
     if args.plot:
 	# Plot the results.
-	for var_name, var_col in vars:
-	    for test in tests:
+        f = plt.figure(1)
+        f.subplots_adjust(hspace=0.3)
+        for i, test in enumerate(tests):
+            for j, (var_name, var_col) in enumerate(variables):
 		test_name = test.func_name
-		plt.title('%s for %s'%(test_name, var_name))
-		plt.xlabel('Bed friction coefficient (n)')
+                graph_fmt = graph_formats[var_name][test_name]
+                ax = plt.subplot('22%i'%(i + 2*j + 1))
+                ax.xaxis.set_major_formatter(formatter)
+                plt.yticks(graph_fmt[0])
+                if i == 1:
+                    ax.yaxis.tick_right()
+                    ax.yaxis.set_label_position('right')
+
+                plt.title(var_name)
+                if j == 1:
+                    plt.xlabel('Bed friction coefficient (n)')
+                else:
+                    #plt.setp(ax.get_xticklabels(), visible=False)
+                    pass
+
 		plt.ylabel(test_name.upper())
-		plt.plot(ns, vals[var_name][test_name])
-		plt.show()
+		plt.plot(ns, vals[var_name][test_name], label=var_name)
+                plt.plot(ns[3], vals[var_name][test_name][3], 'bo')
+                #plt.legend()
+                plt.ylim([graph_fmt[1], graph_fmt[2]])
+        plt.show()
 
     return obs, all_cal_data
 
