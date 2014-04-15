@@ -72,7 +72,7 @@ def calibrate_data(args):
 		print '  %s:'%var_name, test.func_name, test_value
 		vals[var_name][test.func_name].append(test_value)
     
-    def fmt(x, pos):
+    def two_dp_fmt(x, pos):
         return '%1.2f'%x
 
     graph_formats = {
@@ -82,7 +82,7 @@ def calibrate_data(args):
                             'nse':  (np.arange( 0.995, 0.9971, 0.001), 0.9945, 0.9975)}}
 
 
-    formatter = FuncFormatter(fmt)
+    formatter = FuncFormatter(two_dp_fmt)
     if args.plot:
 	# Plot the results.
         f = plt.figure(1)
