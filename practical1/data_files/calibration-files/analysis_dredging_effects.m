@@ -5,13 +5,14 @@ clear
 
 %load the data into Matlab
 
-model = load('../../raw_results/dredging_scenario/dredging_effects.txt');   %<<<< edit filename as required
+%model = load('../../raw_results/dredging_scenario/dredging_effects.txt');   %<<<< edit filename as required
+model = load('../../raw_results/dredging_scenario/matlab_dredging_effect_without_nice_headers.txt');   %<<<< edit filename as required
 
 %pull out the columns and put them in sensibly named vectors
 
 hours = model(:,1); %we only need create one time column
 
-reference_level = model(:,8); %this should be level at the mouth, which
+reference_level = model(:,16); %this should be level at the mouth, which
 %is useful to plot simply as a reference plot against which judge changes
 %in other variables
 
@@ -22,8 +23,8 @@ reference_level = model(:,8); %this should be level at the mouth, which
 %BerthVel = model(:,14); %Berth estuary change in velocity magnitude
 %InletVel = model(:,16); %Inlet estuary change in velocity magnitude
 % MM Changed
-UpperVel = model(:,36); %Upper estuary change in velocity magnitude
 MidVel = model(:,34); %Mid-estuary estuary change in velocity magnitude
+UpperVel = model(:,36); %Upper estuary change in velocity magnitude
 BerthVel = model(:,38); %Berth estuary change in velocity magnitude
 InletVel = model(:,40); %Inlet estuary change in velocity magnitude
 
@@ -34,10 +35,10 @@ InletVel = model(:,40); %Inlet estuary change in velocity magnitude
 %BerthVel = model(:,22); %Berth estuary change in water level
 %InletVel = model(:,24); %Inlet estuary change in water level
 % MM Changed
-UpperVel = model(:,44); %Upper estuary change in water level
-MidVel = model(:,42); %Mid-estuary estuary change in water level
-BerthVel = model(:,46); %Berth estuary change in water level
-InletVel = model(:,48); %Inlet estuary change in water level
+%UpperVel = model(:,44); %Upper estuary change in water level
+%MidVel = model(:,42); %Mid-estuary estuary change in water level
+%BerthVel = model(:,46); %Berth estuary change in water level
+%InletVel = model(:,48); %Inlet estuary change in water level
 
 %Visualise the combination of series we want - subplots work well here
 
