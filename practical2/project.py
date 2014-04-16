@@ -4,9 +4,11 @@ import dateutil.parser
 import numpy as np
 import pylab as plt
 
+DATA_DIR = 'data_files'
+
 def cal():
-    sim_borehole = np.loadtxt('cal_borehole_sim_obs.txt', delimiter='\t', dtype=object)
-    obs_borehole = np.loadtxt('Borehole_Records.txt', delimiter='\t', dtype=object)
+    sim_borehole = np.loadtxt('%s/cal_val/cal_borehole_sim.txt'%(DATA_DIR), delimiter='\t', dtype=object)
+    obs_borehole = np.loadtxt('%s/obs/Borehole_Records.txt'%(DATA_DIR), delimiter='\t', dtype=object)
 
     dts1  = [dateutil.parser.parse(sim_borehole[i, 0]) for i in range(len(sim_borehole))]
     dts2 = [dateutil.parser.parse(obs_borehole[i, 0]) for i in range(len(obs_borehole))]
@@ -28,8 +30,8 @@ def val():
     start_date = dt.datetime(1970, 1, 1)
     end_date = dt.datetime(1981, 1, 1)
 
-    sim_borehole = np.loadtxt('calibrated_model_validationDetailedTS_SZ.txt', delimiter='\t', dtype=object)
-    obs_borehole = np.loadtxt('Borehole_Records.txt', delimiter='\t', dtype=object)
+    sim_borehole = np.loadtxt('%s/cal_val/cal_val_borehole_sim.txt'%(DATA_DIR), delimiter='\t', dtype=object)
+    obs_borehole = np.loadtxt('%s/obs/Borehole_Records.txt'%(DATA_DIR), delimiter='\t', dtype=object)
 
     dts1  = np.array([dateutil.parser.parse(sim_borehole[i, 0]) for i in range(len(sim_borehole))])
     dts2 = np.array([dateutil.parser.parse(obs_borehole[i, 0]) for i in range(len(obs_borehole))])
@@ -66,8 +68,7 @@ def create_args():
 def main(args):
     res = {}
     if args.cal:
-	pass
-	#res['cal'] = cal()
+	res['cal'] = cal()
     if args.val:
 	res['val'] = val()
     plt.show()
