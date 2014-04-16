@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import argparse
 import datetime as dt
 import dateutil.parser
