@@ -77,6 +77,9 @@ def calibrate_data(args):
     def two_dp_fmt(x, pos):
         return '%1.2f'%x
 
+    def three_dp_fmt(x, pos):
+        return '%1.3f'%x
+
     graph_formats = {
             'Velocity magnitude': {'rmse': (np.arange( 0.04, 0.081, 0.01), 0.035, 0.085),
                         'nse':  (np.arange( 0.86, 0.961, 0.02), 0.85, 0.97)},
@@ -84,7 +87,7 @@ def calibrate_data(args):
                             'nse':  (np.arange( 0.995, 0.9971, 0.001), 0.9945, 0.9975)}}
 
 
-    formatter = FuncFormatter(two_dp_fmt)
+    formatter = FuncFormatter(three_dp_fmt)
     if args.plot:
 	# Plot the results.
         f = plt.figure(1)
@@ -95,6 +98,7 @@ def calibrate_data(args):
                 graph_fmt = graph_formats[var_name][test_name]
                 ax = plt.subplot('22%i'%(i + 2*j + 1))
                 ax.xaxis.set_major_formatter(formatter)
+                plt.xticks(np.arange(0.01, 0.041, 0.005))
                 plt.yticks(graph_fmt[0])
                 if i == 1:
                     ax.yaxis.tick_right()
