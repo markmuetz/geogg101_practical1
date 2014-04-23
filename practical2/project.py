@@ -226,15 +226,16 @@ def sim(args, ctrl):
         plt.legend()
 
         if args.regime:
-            regime(args, ctrl['sim_river_times'], river_discharge, sim)
+            scen_reg = regime(args, ctrl['sim_river_times'], river_discharge)
+            ctrl_reg = regime(args, ctrl['sim_river_times'], ctrl['sim_river'])
+            plot_regime(args, scen_reg, fgr_string=sim, loc='first', name='%s scenario'%sim)
+            plot_regime(args, ctrl_reg, fgr_string=sim, loc='second', name='control')
         #plt.show()
 
     return res
 
-def regime(args, times, river_flows, fgr_string = 'ctrl'):
+def regime(args, times, river_flows):
     #times = ctrl['sim_river_times']
-    months = [calendar.month_name[i + 1][:3] for i in range(12)]
-
     # Monthly total for each year (10 years).
     monthly_total = (np.zeros((12, 10)), np.zeros((12, 10)))
     for y in range(10):
@@ -260,43 +261,56 @@ def regime(args, times, river_flows, fgr_string = 'ctrl'):
                 # First column is time.
                 #river_flow = ctrl['sim_river'][:, r + 1].astype(float)
                 river_flow = river_flows[:, r + 1].astype(float)
-                # What if there isn't 1 data point per day?
-                # This won't handle it, instead you could take a monthly mean and multiply
-                # by days in the month...
-                #print(calendar.monthrange(year, m + 1)[1])
-                #print(river_flow[year_mask][month_mask[m]])
                 monthly_total[r][m, y] = river_flow[year_mask][month_mask[m]].mean()\
                                          * calendar.monthrange(year, m + 1)[1]
-            #plt.plot(dt.datetime(year, m + 1, 15), monthly_total[0][m, y], 'x')
 
-    #plt.plot(times, ctrl['sim_river'][:, 1].astype(float))
-    #plt.show()
+    return monthly_total
+
+def plot_regime(args, monthly_total, fgr_string='ctrl', loc='only', name=''):
+    months = [calendar.month_name[i + 1][:3] for i in range(12)]
 
     f = plt.figure('%s: River regime'%fgr_string)
-
     # Plot the regimes two rivers one on top of the other.
     graph_settings = ((110, 250), (50, 100))
+
     #graph_settings = ((110, 220), (50, 80))
     for j in range(2):
         ax = plt.subplot(2, 1, j + 1)
         if True:
-            plt.bar(range(12), monthly_total[j].mean(axis=1), width=1, color='b', 
-                    yerr=monthly_total[j].std(axis=1), error_kw=dict(ecolor='k'))
+            if args.bar:
+                if loc == 'only':
+                    plt.bar(range(12), monthly_total[j].mean(axis=1), width=1, color='b', 
+                            yerr=monthly_total[j].std(axis=1), error_kw=dict(ecolor='k'))
+                elif loc == 'first':
+                    plt.bar(np.arange(12) + 0.1, monthly_total[j].mean(axis=1), width=0.4, color='b', 
+                            yerr=monthly_total[j].std(axis=1), error_kw=dict(ecolor='k'))
+                elif loc == 'second':
+                    plt.bar(np.arange(12) + 0.5, monthly_total[j].mean(axis=1), width=0.4, color='g', 
+                            yerr=monthly_total[j].std(axis=1), error_kw=dict(ecolor='k'))
+            else:
+                if loc == 'only':
+                    plt.plot(np.arange(12) + 0.5, monthly_total[j].mean(axis=1), 'b-')
+                elif loc == 'first':
+                    plt.plot(np.arange(12) + 0.5, monthly_total[j].mean(axis=1), 'b-', label=name)
+                elif loc == 'second':
+                    plt.plot(np.arange(12) + 0.5, monthly_total[j].mean(axis=1), 'g--', label=name)
+                plt.legend()
+
             ax.set_xticks(np.arange(12) + 1./2)
             ax.set_xticklabels(months)
             plt.ylim(graph_settings[j])
+            plt.xlim((0, 12))
         if j == 0:
             plt.ylabel('Karup average monthly\ndischarge (cumecs)')
         else:
             plt.ylabel('Hagebro average monthly\ndischarge (cumecs)')
 
-        if True:
+        if False:
             # Plot each year's monthly discharge.
             for y in range(10):
                 plt.plot(np.arange(12) + 1./2, monthly_total[j][:, y], label='y:%i'%(y + 1971))
             #plt.legend()
-            
-    return {'monthly_total': monthly_total}
+
 
 def create_args():
     parser = argparse.ArgumentParser()
@@ -304,6 +318,7 @@ def create_args():
     parser.add_argument('-v', '--val', action='store_true')
     parser.add_argument('-s', '--sim', action='store_true')
     parser.add_argument('-r', '--regime', action='store_true')
+    parser.add_argument('-b', '--bar', action='store_true')
     return parser.parse_args()
 
 def main(args):
@@ -315,7 +330,10 @@ def main(args):
     if args.sim:
 	res['sim'] = sim(args, res['val'])
     if args.regime:
-	res['reg'] = regime(args, res['val']['sim_river_times'], res['val']['sim_river'])
+	res['sim_reg'] = regime(args, res['val']['sim_river_times'], res['val']['sim_river'])
+	res['obs_reg'] = regime(args, res['val']['obs_river_times'], res['val']['obs_river'])
+        plot_regime(args, res['sim_reg'], loc='first', name='simulated')
+        plot_regime(args, res['obs_reg'], loc='second', name='observed')
     plt.show()
     return res
 
