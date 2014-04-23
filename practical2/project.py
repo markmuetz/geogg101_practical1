@@ -46,6 +46,9 @@ def val():
     sim_river_times = np.array([dateutil.parser.parse(sim_river[i, 0]) for i in range(len(sim_river))])
     obs_river_times = np.array([dateutil.parser.parse(obs_river[i, 0]) for i in range(len(obs_river))])
 
+    borehole_names = ('Borehole 5', 'Borehole 35', 'Borehole 37', 'Borehole 65')
+    river_names = ('Karup', 'Hagebro')
+
     graph_settings = (
             ((62, 66), np.arange(62, 67, 1)),
             ((41, 45), np.arange(41, 46, 1)),
@@ -53,8 +56,10 @@ def val():
             ((25, 29), np.arange(25, 30, 1)))
     f1 = plt.figure('Borehole cal')
     f1.subplots_adjust(hspace=0.2)
+    plt.ylabel('Water height (m)')
     for i in range(4):
 	ax = plt.subplot(4, 1, i + 1)
+        ax.set_ylabel('%s\nHeight (m)'%borehole_names[i])
 	if i != 3:
 	    plt.setp(ax.get_xticklabels(), visible=False)
 	if i == 0:
@@ -75,9 +80,11 @@ def val():
 
         for j in range(2):
             if j == 0:
+                print('cal')
                 scatter_start_date = dt.datetime(1971, 1, 1)
                 end_date = dt.datetime(1976, 1, 1)
             else:
+                print('val')
                 scatter_start_date = dt.datetime(1976, 1, 1)
                 end_date = dt.datetime(1981, 1, 1)
 
@@ -97,6 +104,8 @@ def val():
             line = [slope * graph_settings[i][0][0] + intercept, slope * graph_settings[i][0][1] + intercept]
             plt.plot(graph_settings[i][0], line, 'b-', label='r = %1.2f'%r_value)
 
+            print('  %s: RMSE: %1.2f, NSE: %1.2f, R: %1.2f'%(borehole_names[i], rmse(x, y), nse(x, y), r_value))
+
             plt.xlim(graph_settings[i][0])
             plt.ylim(graph_settings[i][0])
             ax.set_xticks(graph_settings[i][1])
@@ -104,13 +113,17 @@ def val():
             plt.legend(loc='upper left', prop={'size':10})
 
             plt.figure('Borehole cal')
-    #plt.show()
-
 
     f1 = plt.figure('River cal')
     f1.subplots_adjust(hspace=0.2)
+
     for i in range(2):
 	ax = plt.subplot(2, 1, i + 1)
+        ax.set_ylabel('%s\nDischarge (m/s)'%river_names[i])
+	if i == 0:
+	    plt.text(dt.datetime(1977, 1, 1), 17, 'Validation period')
+	    plt.text(dt.datetime(1972, 1, 1), 17, 'Calibration period')
+	    plt.setp(ax.get_xticklabels(), visible=False)
 
 	m = obs_river[:, i + 1].astype(float) != -999
 	m1 = (sim_river_times > start_date) & (sim_river_times < end_date)
@@ -124,9 +137,11 @@ def val():
 
         for j in range(2):
             if j == 0:
+                print('cal')
                 scatter_start_date = dt.datetime(1971, 1, 1)
                 end_date = dt.datetime(1976, 1, 1)
             else:
+                print('val')
                 scatter_start_date = dt.datetime(1976, 1, 1)
                 end_date = dt.datetime(1981, 1, 1)
 
@@ -142,6 +157,8 @@ def val():
             y = intdate_to_sim([int(t.strftime('%s')) for t in obs_river_times[m][m2]])
             plt.plot(x, y, 'kx')
             slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+
+            print('  %s: RMSE: %1.2f, NSE: %1.2f, R: %1.2f'%(river_names[i], rmse(x, y), nse(x, y), r_value))
 
             line = [slope * x.min() + intercept, slope * x.max() + intercept]
             plt.plot((x.min(), x.max()), line, 'b-', label='r = %1.2f'%r_value)
@@ -164,6 +181,15 @@ def val():
             'obs_borehole': obs_borehole,
             'obs_river': obs_river
             }
+
+def rmse(obs, mod):
+    '''Calc RMSE, will not work if len(obs) != len(mod)'''
+    return np.sqrt(1./len(obs) * ((obs - mod)**2).sum())
+
+def nse(obs, mod):
+    '''Calc Nash-Sutcliffe efficiency, will not work if len(obs) != len(mod)'''
+    obs_mean = obs.mean()
+    return 1 - ((obs - mod)**2).sum() / ((obs - obs_mean)**2).sum()
 
 def sim(args, ctrl):
     sims = ('cc_low', 'cc_med', 'cc_hi', 'deforestation', 'reforestation', 'cc_hi_precip_only', 'cc_hi_evap_only')
