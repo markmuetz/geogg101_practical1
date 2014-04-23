@@ -1,10 +1,12 @@
 #!/usr/bin/python
 import argparse
+import calendar
 import datetime as dt
 import dateutil.parser
 import numpy as np
 import pylab as plt
 from glob import glob
+from scipy import interpolate, stats
 
 DATA_DIR = 'data_files'
 
@@ -36,33 +38,125 @@ def val():
     obs_borehole = np.loadtxt('%s/obs/Borehole_Records.txt'%(DATA_DIR), delimiter='\t', dtype=object)
 
     sim_river = np.loadtxt('%s/cal_val/cal_val_river_flow_sim.txt'%(DATA_DIR), delimiter='\t', dtype=object)
+    obs_river = np.loadtxt('%s/obs/Discharge_Records.txt'%(DATA_DIR), delimiter='\t', dtype=object)
 
-    dts1  = np.array([dateutil.parser.parse(sim_borehole[i, 0]) for i in range(len(sim_borehole))])
-    dts2 = np.array([dateutil.parser.parse(obs_borehole[i, 0]) for i in range(len(obs_borehole))])
+    sim_borehole_times = np.array([dateutil.parser.parse(sim_borehole[i, 0]) for i in range(len(sim_borehole))])
+    obs_borehole_times = np.array([dateutil.parser.parse(obs_borehole[i, 0]) for i in range(len(obs_borehole))])
 
-    f1 = plt.figure(1)
-    f1.subplots_adjust(hspace=0)
+    sim_river_times = np.array([dateutil.parser.parse(sim_river[i, 0]) for i in range(len(sim_river))])
+    obs_river_times = np.array([dateutil.parser.parse(obs_river[i, 0]) for i in range(len(obs_river))])
+
+    graph_settings = (
+            ((62, 66), np.arange(62, 67, 1)),
+            ((41, 45), np.arange(41, 46, 1)),
+            ((33, 37), np.arange(33, 38, 1)),
+            ((25, 29), np.arange(25, 30, 1)))
+    f1 = plt.figure('Borehole cal')
+    f1.subplots_adjust(hspace=0.2)
     for i in range(4):
 	ax = plt.subplot(4, 1, i + 1)
 	if i != 3:
 	    plt.setp(ax.get_xticklabels(), visible=False)
 	if i == 0:
-	    plt.text(dt.datetime(1977, 1, 1), 68, 'Validation period')
-	    plt.text(dt.datetime(1972, 1, 1), 68, 'Calibration period')
+	    plt.text(dt.datetime(1977, 1, 1), 66.5, 'Validation period')
+	    plt.text(dt.datetime(1972, 1, 1), 66.5, 'Calibration period')
 
 	m = obs_borehole[:, i + 1].astype(float) != -999
-	m1 = (dts1 > start_date) & (dts1 < end_date)
-	m2 = (dts2[m] > start_date) & (dts2[m] < end_date)
+	m1 = (sim_borehole_times > start_date) & (sim_borehole_times < end_date)
+	m2 = (obs_borehole_times[m] > start_date) & (obs_borehole_times[m] < end_date)
 
-	plt.plot(dts1[m1], sim_borehole[:, i + 1][m1].astype(float))
-	plt.plot(dts2[m][m2], obs_borehole[:, i + 1][m][m2].astype(float), 'k+')
+	plt.plot(sim_borehole_times[m1], sim_borehole[:, i + 1][m1].astype(float))
+	plt.plot(obs_borehole_times[m][m2], obs_borehole[:, i + 1][m][m2].astype(float), 'k+')
+        ax.set_yticks(graph_settings[i][1])
+        plt.ylim(graph_settings[i][0])
 
 	plt.axvline(x=dt.datetime(1971, 1, 1), color='k')
 	plt.axvline(x=dt.datetime(1976, 1, 1), color='k')
+
+        for j in range(2):
+            if j == 0:
+                scatter_start_date = dt.datetime(1971, 1, 1)
+                end_date = dt.datetime(1976, 1, 1)
+            else:
+                scatter_start_date = dt.datetime(1976, 1, 1)
+                end_date = dt.datetime(1981, 1, 1)
+
+            f2 = plt.figure('borehole scatter')
+            f2.subplots_adjust(hspace=0.4)
+            ax = plt.subplot(4, 2, (i * 2 + 1) + j)
+
+            m1 = (sim_borehole_times > scatter_start_date) & (sim_borehole_times < end_date)
+            m2 = (obs_borehole_times[m] > scatter_start_date) & (obs_borehole_times[m] < end_date)
+
+            intdate_to_sim = interpolate.interp1d([int(t.strftime('%s')) for t in sim_borehole_times[m1]], sim_borehole[:, i + 1][m1], bounds_error=False)
+            x = obs_borehole[:, i + 1][m][m2].astype(float)
+            y = intdate_to_sim([int(t.strftime('%s')) for t in obs_borehole_times[m][m2]])
+            plt.plot(x, y, 'kx')
+            slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+
+            line = [slope * graph_settings[i][0][0] + intercept, slope * graph_settings[i][0][1] + intercept]
+            plt.plot(graph_settings[i][0], line, 'b-', label='r = %1.2f'%r_value)
+
+            plt.xlim(graph_settings[i][0])
+            plt.ylim(graph_settings[i][0])
+            ax.set_xticks(graph_settings[i][1])
+            ax.set_yticks(graph_settings[i][1])
+            plt.legend(loc='upper left', prop={'size':10})
+
+            plt.figure('Borehole cal')
     plt.show()
 
-    return {'times1': dts1, 
-            'times2': dts2, 
+
+    f1 = plt.figure('River cal')
+    f1.subplots_adjust(hspace=0.2)
+    for i in range(2):
+	ax = plt.subplot(2, 1, i + 1)
+
+	m = obs_river[:, i + 1].astype(float) != -999
+	m1 = (sim_river_times > start_date) & (sim_river_times < end_date)
+	m2 = (obs_river_times[m] > start_date) & (obs_river_times[m] < end_date)
+
+	plt.plot(sim_river_times[m1], sim_river[:, i + 1][m1].astype(float))
+	plt.plot(obs_river_times[m][m2], obs_river[:, i + 1][m2].astype(float), 'k+')
+
+	plt.axvline(x=dt.datetime(1971, 1, 1), color='k')
+	plt.axvline(x=dt.datetime(1976, 1, 1), color='k')
+
+        for j in range(2):
+            if j == 0:
+                scatter_start_date = dt.datetime(1971, 1, 1)
+                end_date = dt.datetime(1976, 1, 1)
+            else:
+                scatter_start_date = dt.datetime(1976, 1, 1)
+                end_date = dt.datetime(1981, 1, 1)
+
+            f2 = plt.figure('river scatter')
+            f2.subplots_adjust(hspace=0.4)
+            ax = plt.subplot(2, 2, (i * 2 + 1) + j)
+
+            m1 = (sim_river_times > scatter_start_date) & (sim_river_times < end_date)
+            m2 = (obs_river_times[m] > scatter_start_date) & (obs_river_times[m] < end_date)
+
+            intdate_to_sim = interpolate.interp1d([int(t.strftime('%s')) for t in sim_river_times[m1]], sim_river[:, i + 1][m1], bounds_error=False)
+            x = obs_river[:, i + 1][m][m2].astype(float)
+            y = intdate_to_sim([int(t.strftime('%s')) for t in obs_river_times[m][m2]])
+            plt.plot(x, y, 'kx')
+            slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+
+            line = [slope * x.min() + intercept, slope * x.max() + intercept]
+            plt.plot((x.min(), x.max()), line, 'b-', label='r = %1.2f'%r_value)
+
+            #plt.xlim(graph_settings[i][0])
+            #plt.ylim(graph_settings[i][0])
+            #ax.set_xticks(graph_settings[i][1])
+            #ax.set_yticks(graph_settings[i][1])
+            plt.legend(loc='upper left', prop={'size':10})
+
+        plt.figure('River cal')
+    plt.show()
+
+    return {'times1': sim_borehole_times, 
+            'times2': obs_borehole_times, 
             'borehole': sim_borehole, 
             'river': sim_river, 
             'obs_borehole': obs_borehole
@@ -92,25 +186,78 @@ def sim(args, ctrl):
         plt.title('%s - ctrl'%(sim))
         ax1 = plt.subplot('211')
         plt.plot(river_discharge[:, 1].astype(float), 'b--', label='r1')
-        #plt.plot(river_discharge[:, 2].astype(float), 'g--', label='r2')
+        plt.plot(river_discharge[:, 2].astype(float), 'g--', label='r2')
 
         plt.plot(ctrl['river'][:, 1].astype(float), 'b-', label='r1')
-        #plt.plot(ctrl['river'][:, 2].astype(float), 'g-', label='r2')
+        plt.plot(ctrl['river'][:, 2].astype(float), 'g-', label='r2')
 
         ax2 = plt.subplot('212')
         plt.plot(river_discharge[:, 1].astype(float) - ctrl['river'][:, 1].astype(float), 'b-', label='r1')
-        #plt.plot(river_discharge[:, 2].astype(float) - ctrl['river'][:, 2].astype(float), 'g-', label='r2')
+        plt.plot(river_discharge[:, 2].astype(float) - ctrl['river'][:, 2].astype(float), 'g-', label='r2')
 
         plt.legend()
         plt.show()
 
     return res
 
+def regime(args, ctrl):
+    times = ctrl['times1']
+    months = [calendar.month_name[i + 1][:3] for i in range(12)]
+
+    # Monthly total for each year (10 years).
+    monthly_total = (np.zeros((12, 10)), np.zeros((12, 10)))
+    for y in range(10):
+        start_date = dt.datetime(1971 + y, 1, 1)
+        end_date = dt.datetime(1971 + y, 12, 31)
+
+        year_mask = (times >= start_date) & (times <= end_date)
+
+        # Create empty month mask.
+        month_mask = []
+        for m in range(12):
+            month_mask.append(np.zeros_like(times[year_mask]).astype(bool))
+
+        # Fill it in for this year.
+        for i, t in enumerate(times[year_mask]):
+            for j in range(12):
+                if t.month == j + 1:
+                    month_mask[j][i] = True
+
+        for m in range(12):
+            for r in range(2):
+                # First column is time.
+                river_flow = ctrl['river'][:, r + 1]
+                monthly_total[r][m, y] = river_flow[year_mask][month_mask[m]].astype(float).sum()
+
+    f = plt.figure(0)
+
+    # Plot the regimes two rivers one on top of the other.
+    for j in range(2):
+        ax = plt.subplot(2, 1, j + 1)
+        plt.bar(range(12), monthly_total[j].mean(axis=1), width=1, color='b', 
+                yerr=monthly_total[j].std(axis=1), error_kw=dict(ecolor='k'))
+        ax.set_xticks(np.arange(12) + 1./2)
+        ax.set_xticklabels(months)
+        if j == 0:
+            plt.ylabel('Karup average monthly\ndischarge (cumecs)')
+        else:
+            plt.ylabel('Hagebro average monthly\ndischarge (cumecs)')
+
+        if False:
+            # Plot each year's monthly discharge.
+            for y in range(10):
+                 plt.plot(np.arange(12) + 1./2, mas[j][:, y])
+
+    plt.show()
+
+    return {'monthly_total': monthly_total}
+
 def create_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--cal', action='store_true')
     parser.add_argument('-v', '--val', action='store_true')
     parser.add_argument('-s', '--sim', action='store_true')
+    parser.add_argument('-r', '--regime', action='store_true')
     return parser.parse_args()
 
 def main(args):
@@ -121,6 +268,8 @@ def main(args):
 	res['val'] = val()
     if args.sim:
 	res['sim'] = sim(args, res['val'])
+    if args.regime:
+	res['reg'] = regime(args, res['val'])
     plt.show()
     return res
 

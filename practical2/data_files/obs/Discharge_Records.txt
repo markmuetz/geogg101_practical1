@@ -1,6 +1,6 @@
-Data stored on MIKE 11 timesteps
-Time	Karup River at Hagebro	Karup River at Karup
-Unit	100001	1800	0	100001	1800	0
+#Data stored on MIKE 11 timesteps
+#Time	Karup River at Hagebro	Karup River at Karup
+#Unit	100001	1800	0	100001	1800	0
 1970-12-01 00:00:00	5.88512	2.42054
 1970-12-02 00:00:00	6.19588	2.40236
 1970-12-03 00:00:00	6.286	2.55328
