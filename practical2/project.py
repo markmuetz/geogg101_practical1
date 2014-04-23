@@ -177,8 +177,8 @@ def sim(args, ctrl):
         river_discharge = np.loadtxt(river_discharge_filename, skiprows=3, delimiter='\t', dtype=object)
         borehole = np.loadtxt(borehole_filename, skiprows=3, delimiter='\t', dtype=object)
 
-        res[sim]['river'] = river_discharge
-        res[sim]['borehole'] = borehole
+        res[sim]['sim_river'] = river_discharge
+        res[sim]['sim_borehole'] = borehole
 
         for i in range(len(river_discharge[:, 0])):
             if river_discharge[i, 0] != ctrl['sim_river'][i, 0]:
@@ -198,12 +198,15 @@ def sim(args, ctrl):
         plt.plot(river_discharge[:, 2].astype(float) - ctrl['sim_river'][:, 2].astype(float), 'g-', label='r2')
 
         plt.legend()
+
+        if args.regime:
+            regime(args, ctrl['sim_river_times'], river_discharge, sim)
         #plt.show()
 
     return res
 
-def regime(args, ctrl):
-    times = ctrl['sim_river_times']
+def regime(args, times, river_flows, fgr_string = 'ctrl'):
+    #times = ctrl['sim_river_times']
     months = [calendar.month_name[i + 1][:3] for i in range(12)]
 
     # Monthly total for each year (10 years).
@@ -229,7 +232,8 @@ def regime(args, ctrl):
         for m in range(12):
             for r in range(2):
                 # First column is time.
-                river_flow = ctrl['sim_river'][:, r + 1].astype(float)
+                #river_flow = ctrl['sim_river'][:, r + 1].astype(float)
+                river_flow = river_flows[:, r + 1].astype(float)
                 # What if there isn't 1 data point per day?
                 # This won't handle it, instead you could take a monthly mean and multiply
                 # by days in the month...
@@ -242,7 +246,7 @@ def regime(args, ctrl):
     #plt.plot(times, ctrl['sim_river'][:, 1].astype(float))
     #plt.show()
 
-    f = plt.figure('River regime')
+    f = plt.figure('%s: River regime'%fgr_string)
 
     # Plot the regimes two rivers one on top of the other.
     graph_settings = ((110, 250), (50, 100))
@@ -285,7 +289,7 @@ def main(args):
     if args.sim:
 	res['sim'] = sim(args, res['val'])
     if args.regime:
-	res['reg'] = regime(args, res['val'])
+	res['reg'] = regime(args, res['val']['sim_river_times'], res['val']['sim_river'])
     plt.show()
     return res
 
