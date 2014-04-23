@@ -104,7 +104,7 @@ def val():
             plt.legend(loc='upper left', prop={'size':10})
 
             plt.figure('Borehole cal')
-    plt.show()
+    #plt.show()
 
 
     f1 = plt.figure('River cal')
@@ -153,14 +153,16 @@ def val():
             plt.legend(loc='upper left', prop={'size':10})
 
         plt.figure('River cal')
-    plt.show()
+    #plt.show()
 
-    return {'times1': sim_borehole_times, 
-            'times2': obs_borehole_times, 
-            'borehole': sim_borehole, 
-            'river': sim_river, 
-            'obs_borehole': obs_borehole
-            #'obs_river': obs_river
+    return {'sim_borehole_times': sim_borehole_times, 
+            'obs_borehole_times': obs_borehole_times, 
+            'sim_river_times': sim_river_times, 
+            'obs_river_times': obs_river_times, 
+            'sim_borehole': sim_borehole, 
+            'sim_river': sim_river, 
+            'obs_borehole': obs_borehole,
+            'obs_river': obs_river
             }
 
 def sim(args, ctrl):
@@ -179,36 +181,37 @@ def sim(args, ctrl):
         res[sim]['borehole'] = borehole
 
         for i in range(len(river_discharge[:, 0])):
-            if river_discharge[i, 0] != ctrl['river'][i, 0]:
+            if river_discharge[i, 0] != ctrl['sim_river'][i, 0]:
                 print('uh-oh %s'%str(river_discharge[i, 0]))
 
-        f = plt.figure(2)
+        f = plt.figure(sim)
         plt.title('%s - ctrl'%(sim))
         ax1 = plt.subplot('211')
         plt.plot(river_discharge[:, 1].astype(float), 'b--', label='r1')
         plt.plot(river_discharge[:, 2].astype(float), 'g--', label='r2')
 
-        plt.plot(ctrl['river'][:, 1].astype(float), 'b-', label='r1')
-        plt.plot(ctrl['river'][:, 2].astype(float), 'g-', label='r2')
+        plt.plot(ctrl['sim_river'][:, 1].astype(float), 'b-', label='r1')
+        plt.plot(ctrl['sim_river'][:, 2].astype(float), 'g-', label='r2')
 
         ax2 = plt.subplot('212')
-        plt.plot(river_discharge[:, 1].astype(float) - ctrl['river'][:, 1].astype(float), 'b-', label='r1')
-        plt.plot(river_discharge[:, 2].astype(float) - ctrl['river'][:, 2].astype(float), 'g-', label='r2')
+        plt.plot(river_discharge[:, 1].astype(float) - ctrl['sim_river'][:, 1].astype(float), 'b-', label='r1')
+        plt.plot(river_discharge[:, 2].astype(float) - ctrl['sim_river'][:, 2].astype(float), 'g-', label='r2')
 
         plt.legend()
-        plt.show()
+        #plt.show()
 
     return res
 
 def regime(args, ctrl):
-    times = ctrl['times1']
+    times = ctrl['sim_river_times']
     months = [calendar.month_name[i + 1][:3] for i in range(12)]
 
     # Monthly total for each year (10 years).
     monthly_total = (np.zeros((12, 10)), np.zeros((12, 10)))
     for y in range(10):
-        start_date = dt.datetime(1971 + y, 1, 1)
-        end_date = dt.datetime(1971 + y, 12, 31)
+        year = 1971 + y
+        start_date = dt.datetime(year, 1, 1)
+        end_date = dt.datetime(year, 12, 31)
 
         year_mask = (times >= start_date) & (times <= end_date)
 
@@ -226,30 +229,43 @@ def regime(args, ctrl):
         for m in range(12):
             for r in range(2):
                 # First column is time.
-                river_flow = ctrl['river'][:, r + 1]
-                monthly_total[r][m, y] = river_flow[year_mask][month_mask[m]].astype(float).sum()
+                river_flow = ctrl['sim_river'][:, r + 1].astype(float)
+                # What if there isn't 1 data point per day?
+                # This won't handle it, instead you could take a monthly mean and multiply
+                # by days in the month...
+                #print(calendar.monthrange(year, m + 1)[1])
+                #print(river_flow[year_mask][month_mask[m]])
+                monthly_total[r][m, y] = river_flow[year_mask][month_mask[m]].mean()\
+                                         * calendar.monthrange(year, m + 1)[1]
+            #plt.plot(dt.datetime(year, m + 1, 15), monthly_total[0][m, y], 'x')
 
-    f = plt.figure(0)
+    #plt.plot(times, ctrl['sim_river'][:, 1].astype(float))
+    #plt.show()
+
+    f = plt.figure('River regime')
 
     # Plot the regimes two rivers one on top of the other.
+    graph_settings = ((110, 250), (50, 100))
+    #graph_settings = ((110, 220), (50, 80))
     for j in range(2):
         ax = plt.subplot(2, 1, j + 1)
-        plt.bar(range(12), monthly_total[j].mean(axis=1), width=1, color='b', 
-                yerr=monthly_total[j].std(axis=1), error_kw=dict(ecolor='k'))
-        ax.set_xticks(np.arange(12) + 1./2)
-        ax.set_xticklabels(months)
+        if True:
+            plt.bar(range(12), monthly_total[j].mean(axis=1), width=1, color='b', 
+                    yerr=monthly_total[j].std(axis=1), error_kw=dict(ecolor='k'))
+            ax.set_xticks(np.arange(12) + 1./2)
+            ax.set_xticklabels(months)
+            plt.ylim(graph_settings[j])
         if j == 0:
             plt.ylabel('Karup average monthly\ndischarge (cumecs)')
         else:
             plt.ylabel('Hagebro average monthly\ndischarge (cumecs)')
 
-        if False:
+        if True:
             # Plot each year's monthly discharge.
             for y in range(10):
-                 plt.plot(np.arange(12) + 1./2, mas[j][:, y])
-
-    plt.show()
-
+                plt.plot(np.arange(12) + 1./2, monthly_total[j][:, y], label='y:%i'%(y + 1971))
+            #plt.legend()
+            
     return {'monthly_total': monthly_total}
 
 def create_args():
