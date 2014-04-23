@@ -232,12 +232,21 @@ def sim(args, ctrl):
             plot_regime(args, ctrl_reg, fgr_string=sim, loc='second', name='control')
         #plt.show()
 
+    if args.regime:
+        sim = 'comb'
+        hi_reg = regime(args, ctrl['sim_river_times'], res['cc_hi']['sim_river'])
+        hi_precip_scen_reg = regime(args, ctrl['sim_river_times'], res['cc_hi_precip_only']['sim_river'])
+        hi_evapor_scen_reg = regime(args, ctrl['sim_river_times'], res['cc_hi_evap_only']['sim_river'])
+        combined_reg = (hi_precip_scen_reg + hi_evapor_scen_reg) / 2
+        plot_regime(args, combined_reg, fgr_string=sim, loc='first', name='%s scenario'%sim)
+        plot_regime(args, hi_reg, fgr_string=sim, loc='second', name='%s scenario'%sim)
+
     return res
 
 def regime(args, times, river_flows):
     #times = ctrl['sim_river_times']
     # Monthly total for each year (10 years).
-    monthly_total = (np.zeros((12, 10)), np.zeros((12, 10)))
+    monthly_total = np.zeros((2, 12, 10))
     for y in range(10):
         year = 1971 + y
         start_date = dt.datetime(year, 1, 1)
