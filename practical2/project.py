@@ -79,18 +79,23 @@ def val():
 	plt.axvline(x=dt.datetime(1976, 1, 1), color='k')
 
         for j in range(2):
+            f2 = plt.figure('borehole scatter')
+            f2.subplots_adjust(hspace=0.4)
+            ax = plt.subplot(4, 2, (i * 2 + 1) + j)
+
             if j == 0:
                 print('cal')
                 scatter_start_date = dt.datetime(1971, 1, 1)
                 end_date = dt.datetime(1976, 1, 1)
+                if i == 0:
+                    plt.text(63, 66.5, 'Calibration period')
             else:
                 print('val')
                 scatter_start_date = dt.datetime(1976, 1, 1)
                 end_date = dt.datetime(1981, 1, 1)
+                if i == 0:
+                    plt.text(63, 66.5, 'Validation period')
 
-            f2 = plt.figure('borehole scatter')
-            f2.subplots_adjust(hspace=0.4)
-            ax = plt.subplot(4, 2, (i * 2 + 1) + j)
 
             m1 = (sim_borehole_times > scatter_start_date) & (sim_borehole_times < end_date)
             m2 = (obs_borehole_times[m] > scatter_start_date) & (obs_borehole_times[m] < end_date)
@@ -102,7 +107,7 @@ def val():
             slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
 
             line = [slope * graph_settings[i][0][0] + intercept, slope * graph_settings[i][0][1] + intercept]
-            plt.plot(graph_settings[i][0], line, 'b-', label='r = %1.2f'%r_value)
+            plt.plot(graph_settings[i][0], line, 'b-', label='R = %1.2f'%r_value)
 
             print('  %s: RMSE: %1.2f, NSE: %1.2f, R: %1.2f'%(borehole_names[i], rmse(x, y), nse(x, y), r_value))
 
@@ -114,6 +119,9 @@ def val():
 
             plt.figure('Borehole cal')
 
+    graph_settings = (
+            ((3, 11), np.arange(3, 12, 1)),
+            ((1.6, 3.2), np.arange(1.6, 3.3, 0.4)))
     f1 = plt.figure('River cal')
     f1.subplots_adjust(hspace=0.2)
 
@@ -136,18 +144,23 @@ def val():
 	plt.axvline(x=dt.datetime(1976, 1, 1), color='k')
 
         for j in range(2):
+
+            f2 = plt.figure('river scatter')
+            f2.subplots_adjust(hspace=0.2)
+            ax = plt.subplot(2, 2, (i * 2 + 1) + j)
+
             if j == 0:
                 print('cal')
                 scatter_start_date = dt.datetime(1971, 1, 1)
                 end_date = dt.datetime(1976, 1, 1)
+                if i == 0:
+                    plt.text(5, 11.5, 'Calibration period')
             else:
                 print('val')
                 scatter_start_date = dt.datetime(1976, 1, 1)
                 end_date = dt.datetime(1981, 1, 1)
-
-            f2 = plt.figure('river scatter')
-            f2.subplots_adjust(hspace=0.4)
-            ax = plt.subplot(2, 2, (i * 2 + 1) + j)
+                if i == 0:
+                    plt.text(5, 11.5, 'Validation period')
 
             m1 = (sim_river_times > scatter_start_date) & (sim_river_times < end_date)
             m2 = (obs_river_times[m] > scatter_start_date) & (obs_river_times[m] < end_date)
@@ -161,8 +174,12 @@ def val():
             print('  %s: RMSE: %1.2f, NSE: %1.2f, R: %1.2f'%(river_names[i], rmse(x, y), nse(x, y), r_value))
 
             line = [slope * x.min() + intercept, slope * x.max() + intercept]
-            plt.plot((x.min(), x.max()), line, 'b-', label='r = %1.2f'%r_value)
+            plt.plot((x.min(), x.max()), line, 'b-', label='R = %1.2f'%r_value)
 
+            plt.xlim(graph_settings[i][0])
+            plt.ylim(graph_settings[i][0])
+            ax.set_xticks(graph_settings[i][1])
+            ax.set_yticks(graph_settings[i][1])
             #plt.xlim(graph_settings[i][0])
             #plt.ylim(graph_settings[i][0])
             #ax.set_xticks(graph_settings[i][1])
