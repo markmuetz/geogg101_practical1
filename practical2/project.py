@@ -26,7 +26,6 @@ def cal():
 	plt.title('cal')
 	plt.plot(dts2[m][m2], obs_borehole[:, i + 1][m][m2].astype(float), 'k+')
 	plt.plot(dts1, sim_borehole[:, i + 1].astype(float))
-    #plt.show()
 
     return dts1, dts2, sim_borehole, obs_borehole
 
@@ -100,22 +99,24 @@ def plot_val(args, res):
 
         for j in range(2):
             f2 = plt.figure('borehole scatter')
-            f2.subplots_adjust(hspace=0.4)
-            ax = plt.subplot(4, 2, (i * 2 + 1) + j)
+            f2.subplots_adjust(hspace=0.2, wspace=0.4)
+            ax = plt.subplot(2, 4, (j * 4 + 1) + i)
+
+            if i == 0:
+                if j == 0:
+                    ax.set_ylabel('Calibration period')
+                elif j == 1:
+                    ax.set_ylabel('Validation period')
 
             if j == 0:
                 print('cal')
                 scatter_start_date = dt.datetime(1971, 1, 1)
                 end_date = dt.datetime(1976, 1, 1)
-                if i == 0:
-                    plt.text(63, 66.5, 'Calibration period')
+                plt.title(borehole_names[i])
             else:
                 print('val')
                 scatter_start_date = dt.datetime(1976, 1, 1)
                 end_date = dt.datetime(1981, 1, 1)
-                if i == 0:
-                    plt.text(63, 66.5, 'Validation period')
-
 
             m1 = (sim_borehole_times > scatter_start_date) & (sim_borehole_times < end_date)
             m2 = (obs_borehole_times[m] > scatter_start_date) & (obs_borehole_times[m] < end_date)
@@ -127,7 +128,7 @@ def plot_val(args, res):
             slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
 
             line = [slope * graph_settings[i][0][0] + intercept, slope * graph_settings[i][0][1] + intercept]
-            plt.plot(graph_settings[i][0], line, 'b-', label='R = %1.2f'%r_value)
+            plt.plot(graph_settings[i][0], line, 'b-', label='R=%1.2f\nm=%1.2f\nc=%1.2f'%(r_value, slope, intercept))
 
             print('  %s: RMSE: %1.2f, NSE: %1.2f, R: %1.2f'%(borehole_names[i], rmse(x, y), nse(x, y), r_value))
 
@@ -135,7 +136,8 @@ def plot_val(args, res):
             plt.ylim(graph_settings[i][0])
             ax.set_xticks(graph_settings[i][1])
             ax.set_yticks(graph_settings[i][1])
-            plt.legend(loc='upper left', prop={'size':10})
+            plt.legend(loc='lower right', frameon=False, prop={'size':10})
+            #plt.text(graph_settings[i][0][0] + 0.5, graph_settings[i][0][1] - 1, 'R=%1.2f\nm=%1.2f\nc=%1.2f'%(r_value, slope, intercept), fontsize=10)
 
             plt.figure('Borehole cal')
 
@@ -166,21 +168,24 @@ def plot_val(args, res):
         for j in range(2):
 
             f2 = plt.figure('river scatter')
-            f2.subplots_adjust(hspace=0.2)
-            ax = plt.subplot(2, 2, (i * 2 + 1) + j)
+            f2.subplots_adjust(hspace=0.2, wspace=0.2)
+            ax = plt.subplot(2, 2, (j * 2 + 1) + i)
+
+            if i == 0:
+                if j == 0:
+                    ax.set_ylabel('Calibration period')
+                elif j == 1:
+                    ax.set_ylabel('Validation period')
 
             if j == 0:
                 print('cal')
                 scatter_start_date = dt.datetime(1971, 1, 1)
                 end_date = dt.datetime(1976, 1, 1)
-                if i == 0:
-                    plt.text(5, 11.5, 'Calibration period')
+                ax.set_title(river_names[i])
             else:
                 print('val')
                 scatter_start_date = dt.datetime(1976, 1, 1)
                 end_date = dt.datetime(1981, 1, 1)
-                if i == 0:
-                    plt.text(5, 11.5, 'Validation period')
 
             m1 = (sim_river_times > scatter_start_date) & (sim_river_times < end_date)
             m2 = (obs_river_times[m] > scatter_start_date) & (obs_river_times[m] < end_date)
@@ -193,23 +198,17 @@ def plot_val(args, res):
 
             print('  %s: RMSE: %1.2f, NSE: %1.2f, R: %1.2f'%(river_names[i], rmse(x, y), nse(x, y), r_value))
 
-            #line = [slope * x.min() + intercept, slope * x.max() + intercept]
-            #plt.plot((x.min(), x.max()), line, 'b-', label='R = %1.2f'%r_value)
             line = [slope * graph_settings[i][0][0] + intercept, slope * graph_settings[i][0][1] + intercept]
-            plt.plot(graph_settings[i][0], line, 'b-', label='R = %1.2f'%r_value)
+            plt.plot(graph_settings[i][0], line, 'b-', label='R=%1.2f\nm=%1.2f\nc=%1.2f'%(r_value, slope, intercept))
+            #plt.plot(graph_settings[i][0], line, 'b-', label='R = %1.2f'%r_value)
 
             plt.xlim(graph_settings[i][0])
             plt.ylim(graph_settings[i][0])
             ax.set_xticks(graph_settings[i][1])
             ax.set_yticks(graph_settings[i][1])
-            #plt.xlim(graph_settings[i][0])
-            #plt.ylim(graph_settings[i][0])
-            #ax.set_xticks(graph_settings[i][1])
-            #ax.set_yticks(graph_settings[i][1])
-            plt.legend(loc='upper left', prop={'size':10})
+            plt.legend(loc='lower right', frameon=False, prop={'size':10})
 
         plt.figure('River cal')
-    #plt.show()
 
 def rmse(obs, mod):
     '''Calc RMSE, will not work if len(obs) != len(mod)'''
@@ -280,7 +279,6 @@ def sim(args, ctrl, cc_only=True):
     return res
 
 def regime(args, times, river_flows):
-    #times = ctrl['sim_river_times']
     # Monthly total for each year (10 years).
     monthly_total = np.zeros((2, 12, 10))
     for y in range(10):
@@ -303,8 +301,6 @@ def regime(args, times, river_flows):
 
         for m in range(12):
             for r in range(2):
-                # First column is time.
-                #river_flow = ctrl['sim_river'][:, r + 1].astype(float)
                 river_flow = river_flows[:, r + 1].astype(float)
                 monthly_total[r][m, y] = river_flow[year_mask][month_mask[m]].mean()\
                                          * calendar.monthrange(year, m + 1)[1]
@@ -314,7 +310,6 @@ def regime(args, times, river_flows):
 def plot_regime(args, monthly_total, loc='only', name='', ax=None, r=0, c=''):
     months = [calendar.month_name[i + 1][:1] for i in range(12)]
 
-    # Plot the regimes two rivers one on top of the other.
     graph_settings = ((120, 230), (55, 85))
 
     if True:
